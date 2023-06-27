@@ -5,6 +5,7 @@ urlpatterns = [
     path('', home),
     path('register', register),
     path('login', login),
-    path('project', create_project),
+    path('get_project', create_project),
+    path('create_project', create_project),
     path('project/<int:project_id>', update_project),
 ]

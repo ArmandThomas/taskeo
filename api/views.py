@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from .serializers import UserSerializer, ProjectSerializer
 
-from .models import User
+from .models import User, Project
 
 
 def get_user_instance_by_id(id):
@@ -74,13 +74,24 @@ def create_project(request):
     else:
         return Response('Bad Request')
 
+
+@api_view(['GET'])
+def get_project(request, project_id):
+    my_middleware(request)
+    if request.method == 'GET':
+        project = Project.objects.get(id=project_id, owner=request.data['owner'])
+        return Response({'id': project.id, 'name': project.name, 'owner': project.owner.id})
+    else:
+        return Response('Bad Request')
+
+
 @api_view(['PUT'])
 def update_project(request, project_id):
     my_middleware(request)
     if request.method == 'PUT':
         serializer = ProjectSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.update_project(project_id, serializer.validated_data)
+            project = serializer.update_project(project_id, serializer.validated_data)
             return Response(serializer.data)
         else:
             return Response(serializer.errors)

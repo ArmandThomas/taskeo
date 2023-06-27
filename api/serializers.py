@@ -73,8 +73,8 @@ class ProjectSerializer(serializers.ModelSerializer):
         project.save()
         return project
 
-    def update_project(self, validated_data):
-        project = Project.objects.get(id=validated_data['id'])
+    def update_project(self, project_id, validated_data):
+        project = Project.objects.get(id = project_id)
         if project.owner != validated_data['owner']:
             raise serializers.ValidationError('You are not the owner of this project')
         project.name = validated_data['name']
