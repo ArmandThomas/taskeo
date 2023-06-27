@@ -4,9 +4,9 @@ from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .serializers import UserSerializer, ProjectSerializer
+from .serializers import UserSerializer, ProjectSerializer, StatusSerializer
 
-from .models import User, Project
+from .models import User, Project, Status
 
 
 def get_user_instance_by_id(id):
@@ -75,12 +75,13 @@ def create_project(request):
         return Response('Bad Request')
 
 
-@api_view(['GET'])
-def get_project(request, project_id):
+@api_view(['POST'])
+def get_projects(request):
     my_middleware(request)
-    if request.method == 'GET':
-        project = Project.objects.get(id=project_id, owner=request.data['owner'])
-        return Response({'id': project.id, 'name': project.name, 'owner': project.owner.id})
+    if request.method == 'POST':
+        request.data['name'] = 'name'
+        project = Project.objects.get(owner=request.data['owner'])
+        return Response(ProjectSerializer(project).data)
     else:
         return Response('Bad Request')
 
@@ -93,6 +94,51 @@ def update_project(request, project_id):
         if serializer.is_valid():
             project = serializer.update_project(project_id, serializer.validated_data)
             return Response(serializer.data)
+        else:
+            return Response(serializer.errors)
+    else:
+        return Response('Bad Request')
+
+@api_view(['POST'])
+def get_statuses(request):
+    my_middleware(request)
+    if request.method == 'POST':
+        project_id = request.data['project_id']
+        project = Project.objects.get(id=project_id)
+        if project.owner != request.data['owner']:
+            return Response('You are not the owner of this project')
+        statuses = Status.objects.filter(project=project)
+        return Response(StatusSerializer(statuses, many=True).data)
+    else:
+        return Response('Bad Request')
+
+@api_view(['POST'])
+def create_statuses(request):
+    my_middleware(request)
+    if request.method == 'POST':
+        project_id = request.data['project_id']
+        project = Project.objects.get(id=project_id)
+        if project.owner != request.data['owner']:
+            return Response('You are not the owner of this project')
+        serializer = StatusSerializer(data=request.data)
+        if serializer.is_valid():
+            status = serializer.create_status(serializer.validated_data)
+            return Response({'id': status.id, 'name': status.name, 'project': status.project.id})
+    else:
+        return Response('Bad Request')
+
+@api_view(['PUT'])
+def update_status(request, status_id):
+    my_middleware(request)
+    if request.method == 'PUT':
+        project_id = request.data['project_id']
+        project = Project.objects.get(id=project_id)
+        if project.owner != request.data['owner']:
+            return Response('You are not the owner of this project')
+        serializer = StatusSerializer(data=request.data)
+        if serializer.is_valid():
+            status = serializer.update_status(status_id, serializer.validated_data)
+            return Response({'id': status.id, 'name': status.name, 'project': status.project.id})
         else:
             return Response(serializer.errors)
     else:

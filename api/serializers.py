@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.models import User, Project
+from api.models import User, Project, Status
 
 import bcrypt
 
@@ -81,5 +81,24 @@ class ProjectSerializer(serializers.ModelSerializer):
         project.save()
         return project
 
+class StatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Status
+        fields = '__all__'
 
+    def create_status(self, validated_data):
+        status = Status(
+            name=validated_data['name'],
+            project=validated_data['project'],
+        )
+        status.save()
+        return status
+
+    def update_status(self, status_id, validated_data):
+        status = Status.objects.get(id = status_id)
+        if status.owner != validated_data['owner']:
+            raise serializers.ValidationError('You are not the owner of this status')
+        status.name = validated_data['name']
+        status.save()
+        return status
 
