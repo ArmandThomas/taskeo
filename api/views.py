@@ -80,8 +80,8 @@ def get_projects(request):
     my_middleware(request)
     if request.method == 'POST':
         request.data['name'] = 'name'
-        project = Project.objects.get(owner=request.data['owner'])
-        return Response(ProjectSerializer(project).data)
+        project = Project.objects.filter(owner=request.data['owner'])
+        return Response(project.values())
     else:
         return Response('Bad Request')
 
