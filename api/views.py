@@ -105,8 +105,6 @@ def get_statuses(request):
     if request.method == 'POST':
         project_id = request.data['project_id']
         project = Project.objects.get(id=project_id)
-        if project.owner != request.data['owner']:
-            return Response('You are not the owner of this project')
         statuses = Status.objects.filter(project=project)
         return Response(StatusSerializer(statuses, many=True).data)
     else:
@@ -116,14 +114,12 @@ def get_statuses(request):
 def create_statuses(request):
     my_middleware(request)
     if request.method == 'POST':
-        project_id = request.data['project_id']
-        project = Project.objects.get(id=project_id)
-        if project.owner != request.data['owner']:
-            return Response('You are not the owner of this project')
         serializer = StatusSerializer(data=request.data)
         if serializer.is_valid():
             status = serializer.create_status(serializer.validated_data)
             return Response({'id': status.id, 'name': status.name, 'project': status.project.id})
+        else :
+            return Response(serializer.errors)
     else:
         return Response('Bad Request')
 
